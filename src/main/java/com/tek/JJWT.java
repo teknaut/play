@@ -1,10 +1,7 @@
 package com.tek;
 
 import com.nimbusds.jose.*;
-import com.nimbusds.jose.crypto.MACSigner;
-import com.nimbusds.jose.crypto.MACVerifier;
-import com.nimbusds.jose.crypto.RSAEncrypter;
-import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.KeyUse;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
@@ -16,6 +13,10 @@ import java.security.SecureRandom;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class JJWT {
 
@@ -58,7 +59,7 @@ public class JJWT {
         return JSONObject.toJSONString(deets);
     }
 
-    private RSAKey generateRecipientKeys() throws JOSEException {
+    protected  RSAKey generateRecipientKeys() throws JOSEException {
         RSAKey senderJWK = new RSAKeyGenerator(2048)
                 .keyID("123")
                 .keyUse(KeyUse.SIGNATURE)
@@ -66,7 +67,7 @@ public class JJWT {
         return senderJWK;
     }
 
-    private RSAKey generateSenderKeys() throws Exception {
+    protected  RSAKey generateSenderKeys() throws Exception {
         RSAKey recipientJWK = new RSAKeyGenerator(2048)
                 .keyID("456")
                 .keyUse(KeyUse.ENCRYPTION)
@@ -74,11 +75,9 @@ public class JJWT {
         return recipientJWK;
     }
 
-    protected String senderSignAndEncrypt() throws Exception {
-
-        RSAKey senderJWK = generateSenderKeys();
-
-        RSAKey recipientJWK = generateRecipientKeys();
+    protected String senderSignAndEncrypt(
+            RSAKey senderJWK,
+            RSAKey recipientJWK) throws Exception {
 
         // Create JWT
         SignedJWT signedJWT = new SignedJWT(
@@ -111,5 +110,28 @@ public class JJWT {
         String jweString = jweObject.serialize();
 
         return jweString;
+    }
+
+    protected void consumeEncryptedJWE(
+            String jweString,
+            RSAKey senderJWK,
+            RSAKey recipientJWK) throws Exception{
+
+        // Parse the JWE string
+        JWEObject jweObject = JWEObject.parse(jweString);
+
+        // Decrypt with private key
+        jweObject.decrypt(new RSADecrypter(recipientJWK));
+
+        // Extract payload
+        SignedJWT signedJWT = jweObject.getPayload().toSignedJWT();
+
+        assertNotNull("Payload not a signed JWT", signedJWT);
+
+        // Check the signature
+        assertTrue(signedJWT.verify(new RSASSAVerifier(senderJWK.toRSAPublicKey())));
+
+        // Retrieve the JWT claims...
+        assertEquals("alice", signedJWT.getJWTClaimsSet().getSubject());
     }
 }
