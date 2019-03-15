@@ -1,7 +1,9 @@
 package com.tek;
 
 import com.nimbusds.jose.jwk.RSAKey;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+@SpringBootApplication
 public class Target {
 
     public static void main(String[] args) {
