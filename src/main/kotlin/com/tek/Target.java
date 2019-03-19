@@ -6,10 +6,10 @@ public class Target {
 
     public static void main(String[] args) {
         Target target = new Target();
-        target.run();
+        target.runJwe();
     }
 
-    private void run(){
+    private void runJwt(){
         JJWT jjwt = new JJWT();
 
         try {
@@ -22,6 +22,17 @@ public class Target {
 
             //now lets decrypt the JWE and verify the signature
             jjwt.consumeEncryptedJWE(jwe, senderJWK, recipientJWK);
+        }
+        catch(Exception ex){
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    private void runJwe(){
+        JWE jwe = new JWE();
+
+        try{
+            jwe.allCode();
         }
         catch(Exception ex){
             System.out.println(ex.getMessage());
