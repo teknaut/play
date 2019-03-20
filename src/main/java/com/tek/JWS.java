@@ -24,7 +24,7 @@ public class JWS {
         String secret = Base64.getEncoder().encodeToString(realSecret);
 
 
-        System.out.println(secret);
+
 
 
         byte[] decodedSecret = secret.getBytes();
